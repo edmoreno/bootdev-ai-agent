@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from call_function import available_functions
+from prompts import system_prompt
 import argparse
 
 load_dotenv()
@@ -24,10 +26,15 @@ def main():
     model = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
     messages = [
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"{args.user_prompt}"},
     ]
 
-    response = client.chat.completions.create(messages=messages, model=model)
+    response = client.chat.completions.create(
+        messages=messages,
+        model=model,
+        tools=available_functions,
+        temperature=0)
 
     if response.usage is not None:
         if args.verbose is True:
