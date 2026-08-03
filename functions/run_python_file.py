@@ -1,6 +1,28 @@
 import os
 import subprocess
 
+schema_run_python_file = {
+    "type": "function",
+    "function": {
+        "name": "run_python_file",
+        "description": "Runs the Python file at a specified filepath relative to the working directory, with optional function arguments (args). Execution is limited to 30 seconds max.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "File path of the Python file to run, relative to the working directory (default is the working directory itself)",
+                },
+                "args": {
+                    "type": "array",
+                    "description": "Optional list of CLI arguments to pass to the command to run the python file, formatted as a list of string items."
+                }
+            },
+            "required": ["file_path"]
+        },
+    },
+}
+
 def run_python_file(working_directory: str, file_path: str, args: list[str] | None = None) -> str:
     try:
         wkdir_abspath: str = os.path.abspath(working_directory)

@@ -1,3 +1,4 @@
+import json
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -33,15 +34,21 @@ def main():
     response = client.chat.completions.create(
         messages=messages,
         model=model,
-        tools=available_functions,
-        temperature=0)
+        tools=available_functions
+    )
 
     if response.usage is not None:
         if args.verbose is True:
             print(f"User prompt: {messages[0]['content']}")
             print(f"Prompt tokens: {response.usage.prompt_tokens}")
             print(f"Response tokens: {response.usage.completion_tokens}")
-        print(f"Response: {response.choices[0].message.content}")
+        message = response.choices[0].message
+        if message.tool_calls:
+            for tool_call in message.tool_calls:
+                function_args = json.loads(tool_call.function.arguments or "{}")
+                print(f"Calling function: {tool_call.function.name}({function_args})")
+        else:
+            print(f"Response: {message.content}")
     else:
         raise RuntimeError("API response incomplete, try again!")
 

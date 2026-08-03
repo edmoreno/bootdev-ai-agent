@@ -3,6 +3,24 @@ import os
 from config import MAX_CHARS
 
 
+schema_get_file_content = {
+    "type": "function",
+    "function": {
+        "name": "get_file_content",
+        "description": "Gets / reads the text content of the specified file at the filepath relative to the working directory, up to a MAX_CHAR limit. If the read content is truncated, a note is added to the output.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "File path of the file to read, relative to the working directory (default is the working directory itself)",
+                },
+            },
+            "required": ["file_path"]
+        },
+    },
+}
+
 def get_file_content(working_directory: str, file_path: str) -> str:
     try:
         wkdir_abspath: str = os.path.abspath(working_directory)
