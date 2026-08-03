@@ -1,10 +1,12 @@
-import json
+import argparse
 import os
+import sys
+
 from dotenv import load_dotenv
 from openai import OpenAI
+
 from call_function import available_functions, call_function
 from prompts import system_prompt
-import argparse
 
 load_dotenv()
 api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -31,28 +33,41 @@ def main():
         {"role": "user", "content": f"{args.user_prompt}"},
     ]
 
-    response = client.chat.completions.create(
-        messages=messages,
-        model=model,
-        tools=available_functions
-    )
+    for _ in range(20):
+        response = client.chat.completions.create(
+            messages=messages,
+            model=model,
+            tools=available_functions
+        )
 
-    if response.usage is not None:
-        message = response.choices[0].message
-        if message.tool_calls:
-            for tool_call in message.tool_calls:
-                result_message = call_function(tool_call)
+        if response.usage is not None:
+            message = response.choices[0].message
+            messages.append(message)
+            if message.tool_calls:
+                for tool_call in message.tool_calls:
+                    result_message = call_function(tool_call)
 
-                if result_message["content"] == "":
-                    raise Exception("tool call content is empty")
-                else:
-                    if args.verbose:
-                        print(f"-> {result_message['content']}")
+                    tool_message = {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": result_message,
+                    }
+                    messages.append(tool_message['content'])
+
+                    if result_message["content"] == "":
+                        raise Exception("tool call content is empty")
+                    else:
+                        if args.verbose:
+                            print(f"-> {result_message['content']}")
+            else:
+                print(f"Response: {message.content}")
+                break
         else:
-            print(f"Response: {message.content}")
-    else:
-        raise RuntimeError("API response incomplete, try again!")
+            raise RuntimeError("API response incomplete, try again!")
 
+    if _ == 20:
+        print("reached maximum iterations!")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
